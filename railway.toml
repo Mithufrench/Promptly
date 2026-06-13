@@ -1,0 +1,9 @@
+[build]
+dockerfile = "Dockerfile"
+context = "."
+
+[deploy]
+startCommand = "python ai-agent/main.py"
+restartPolicyType = "always"
+healthcheckPath = "/health"
+healthcheckTimeout = 10
