@@ -1,5 +1,6 @@
 """
-AI DevOps Platform - Enhanced Backend
+Lightweight AI Agent with FastAPI
+No external API dependencies required
 """
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
@@ -13,9 +14,9 @@ from pathlib import Path
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-app = FastAPI(title="Prompt-to-Prod AI DevOps", version="2.0.0")
+app = FastAPI(title="AI Agent API", version="2.0.0")
 
-# CORS
+# Add CORS middleware
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -24,7 +25,6 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Models
 class QueryRequest(BaseModel):
     query: str
 
@@ -32,49 +32,34 @@ class QueryResponse(BaseModel):
     response: str
     status: str = "success"
 
-# AI Knowledge Base
-AI_RESPONSES = {
-    "docker": "Docker is a containerization platform that allows you to package applications with all their dependencies into containers. Key concepts:\n• Images: Templates for containers\n• Containers: Running instances of images\n• Docker Compose: Orchestrate multiple containers\n• Best practices: Use multi-stage builds, keep images small",
-    "kubernetes": "Kubernetes (K8s) is a container orchestration platform. Key features:\n• Auto-scaling: Scale pods based on demand\n• Load balancing: Distribute traffic\n• Self-healing: Restart failed pods\n• Rolling updates: Deploy without downtime\n• Namespaces: Organize resources",
-    "terraform": "Terraform is Infrastructure as Code tool. Key points:\n• HCL: HashiCorp Configuration Language\n• Resources: Define cloud infrastructure\n• Modules: Reusable components\n• State: Tracks infrastructure state\n• Apply/Plan: Deploy changes safely",
-    "ci/cd": "CI/CD automates software delivery. Pipeline stages:\n• Build: Compile and test code\n• Test: Run automated tests\n• Stage: Deploy to staging environment\n• Production: Deploy to production\n• Monitor: Track application health",
-    "deployment": "Deployment strategies:\n• Blue-Green: Two identical environments\n• Canary: Gradually release to users\n• Rolling: Update instances one by one\n• Shadow: Test in production without affecting users",
-    "devops": "DevOps combines development and operations. Key practices:\n• Automation: Automate repetitive tasks\n• Infrastructure as Code: Manage infrastructure like code\n• Continuous Integration: Frequent code integration\n• Continuous Deployment: Automated releases\n• Monitoring: Track system health and metrics",
-    "monitoring": "Application monitoring tools:\n• Prometheus: Metrics collection\n• Grafana: Visualization and dashboards\n• ELK Stack: Logging (Elasticsearch, Logstash, Kibana)\n• Datadog: Cloud monitoring\n• New Relic: APM and monitoring",
-    "scaling": "Scaling strategies:\n• Horizontal: Add more servers\n• Vertical: Upgrade existing servers\n• Auto-scaling: Automatically adjust based on load\n• Load balancing: Distribute traffic\n• Caching: Reduce database queries",
-}
-
-# Enhanced query processor
+# Simple responses (no LLM needed)
 def process_query(query: str) -> str:
-    """Process query with enhanced AI knowledge base"""
+    """Process user query with simple logic"""
     query_lower = query.lower()
     
-    # Check for specific topics
-    for keyword, response in AI_RESPONSES.items():
-        if keyword in query_lower:
-            return response
-    
-    # General greetings
-    if any(word in query_lower for word in ["hello", "hi", "hey", "greetings"]):
-        return "Hello! I'm the Prompt-to-Prod AI DevOps assistant. Ask me about Docker, Kubernetes, Terraform, CI/CD, deployment strategies, monitoring, scaling, or any DevOps topic!"
-    
-    # Generic response
-    return f"You asked: {query}\n\nI'm trained on DevOps topics like:\n• Docker & Containerization\n• Kubernetes & Orchestration\n• Terraform & Infrastructure as Code\n• CI/CD Pipelines\n• Deployment Strategies\n• Monitoring & Observability\n• Scaling & Performance\n\nAsk me about any of these topics for detailed information!"
+    if "hello" in query_lower or "hi" in query_lower:
+        return "Hello! I'm an AI assistant. How can I help?"
+    elif "math" in query_lower or "calculate" in query_lower:
+        return "I can help with math calculations. Try: 2 + 2"
+    elif "terraform" in query_lower:
+        return "I can help with Terraform infrastructure. Ask me anything!"
+    elif "kubernetes" in query_lower:
+        return "I can help with Kubernetes deployments and commands."
+    elif "docker" in query_lower:
+        return "I can help with Docker containerization. What do you want to know?"
+    elif "devops" in query_lower:
+        return "DevOps is my specialty! I can help with CI/CD, infrastructure, automation, and more."
+    else:
+        return f"You asked: {query}. I'm ready to assist with DevOps tasks!"
 
-# API Endpoints
 @app.get("/health")
 async def health_check():
     """Health check endpoint"""
-    return {
-        "status": "healthy",
-        "service": "ai-devops-platform",
-        "version": "2.0.0",
-        "message": "Platform is running"
-    }
+    return {"status": "healthy", "service": "ai-agent", "version": "2.0.0"}
 
 @app.post("/chat", response_model=QueryResponse)
 async def chat(request: QueryRequest):
-    """Chat with AI assistant"""
+    """Chat with AI agent"""
     try:
         logger.info(f"Query: {request.query}")
         response = process_query(request.query)
@@ -85,46 +70,67 @@ async def chat(request: QueryRequest):
 
 @app.get("/metrics")
 async def metrics():
-    """Get system metrics"""
+    """Prometheus metrics endpoint"""
     return {
-        "agent_requests_total": 42,
+        "agent_requests_total": 0,
         "agent_errors_total": 0,
-        "agent_status": "running",
-        "uptime": "24h",
-        "response_time_ms": 145
+        "agent_status": "running"
     }
 
-# Frontend path detection
+# Frontend path - always /app/frontend in the container (as copied by Dockerfile)
+# Fall back to a sibling `frontend/` directory for local development
+CONTAINER_FRONTEND = Path("/app/frontend")
 app_dir = Path(__file__).parent
-if (app_dir.parent / "frontend").exists():
-    frontend_path = app_dir.parent / "frontend"
+
+if CONTAINER_FRONTEND.exists():
+    frontend_path = CONTAINER_FRONTEND
 else:
     frontend_path = app_dir / "frontend"
 
 logger.info(f"Using frontend path: {frontend_path}")
+logger.info(f"frontend_path exists: {frontend_path.exists()}")
+logger.info(f"index.html exists: {(frontend_path / 'index.html').exists()}")
 
-# Mount static files
+# Mount frontend static files FIRST
 if frontend_path.exists():
     app.mount("/static", StaticFiles(directory=str(frontend_path)), name="static")
-    logger.info(f"Frontend mounted from {frontend_path}")
+    logger.info(f"Frontend static files mounted from {frontend_path}")
+else:
+    logger.warning(f"Frontend directory not found at {frontend_path}")
 
-# Serve HTML
+# Serve HTML at root AFTER mounting static files
 @app.get("/", response_class=HTMLResponse)
 async def root():
-    """Serve frontend"""
+    """Root endpoint - serve frontend HTML"""
     index_file = frontend_path / "index.html"
+    logger.info(f"Root request: looking for index.html at {index_file} (exists={index_file.exists()})")
     if index_file.exists():
         try:
-            with open(index_file, 'r', encoding='utf-8') as f:
-                return f.read()
+            with open(index_file, "r", encoding="utf-8") as f:
+                html_content = f.read()
+            logger.info(f"Serving frontend HTML from {index_file}")
+            return HTMLResponse(content=html_content, status_code=200)
         except Exception as e:
             logger.error(f"Error reading index.html: {str(e)}")
-            return "<h1>Error loading website</h1>"
-    return "<h1>Platform Ready</h1>"
+            return HTMLResponse(content="<h1>Error loading website</h1>", status_code=500)
+    else:
+        logger.warning(f"index.html not found at {index_file}")
+        # Fallback API response
+        return HTMLResponse(content="""
+        <h1>AI Agent API</h1>
+        <p>Frontend not found. Available endpoints:</p>
+        <ul>
+            <li><a href="/health">/health</a> - Health check</li>
+            <li><a href="/docs">/docs</a> - API documentation</li>
+            <li>/chat - Chat endpoint (POST)</li>
+            <li>/metrics - Prometheus metrics</li>
+        </ul>
+        """, status_code=200)
 
-# Run
 if __name__ == "__main__":
     import uvicorn
     port = int(os.getenv("PORT", 8000))
-    logger.info(f"Starting Prompt-to-Prod on port {port}")
+    logger.info(f"Starting AI Agent API on port {port}...")
+    logger.info(f"Frontend available at http://0.0.0.0:{port}/")
+    logger.info(f"API Docs available at http://0.0.0.0:{port}/docs")
     uvicorn.run(app, host="0.0.0.0", port=port, log_level="info")
