@@ -1,7 +1,7 @@
 services:
   ai-agent:
     build:
-      context: ./ai-agent
+      context: .
       dockerfile: Dockerfile
     container_name: p2p-agent
     ports:
