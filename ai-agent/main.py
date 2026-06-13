@@ -4,7 +4,7 @@ No external API dependencies required
 """
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, HTMLResponse
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 import logging
@@ -77,34 +77,43 @@ async def metrics():
         "agent_status": "running"
     }
 
-# Serve static frontend files
+# Frontend path
 frontend_path = Path(__file__).parent.parent / "frontend"
 
-@app.get("/")
-async def root():
-    """Root endpoint - serve frontend or API info"""
-    index_file = frontend_path / "index.html"
-    if index_file.exists():
-        return FileResponse(str(index_file), media_type="text/html")
-    # Fallback to API response if frontend not found
-    return {
-        "message": "AI Agent API",
-        "docs": "/docs",
-        "health": "/health",
-        "endpoints": {
-            "POST /chat": "Chat with AI agent",
-            "GET /health": "Health check",
-            "GET /metrics": "Prometheus metrics",
-            "GET /docs": "API documentation"
-        }
-    }
-
-# Mount frontend static files
+# Mount frontend static files FIRST
 if frontend_path.exists():
     app.mount("/static", StaticFiles(directory=str(frontend_path)), name="static")
-    logger.info(f"Frontend files mounted from {frontend_path}")
+    logger.info(f"Frontend static files mounted from {frontend_path}")
 else:
     logger.warning(f"Frontend directory not found at {frontend_path}")
+
+# Serve HTML at root AFTER mounting static files
+@app.get("/", response_class=HTMLResponse)
+async def root():
+    """Root endpoint - serve frontend HTML"""
+    index_file = frontend_path / "index.html"
+    if index_file.exists():
+        try:
+            with open(index_file, 'r', encoding='utf-8') as f:
+                html_content = f.read()
+            logger.info("Serving frontend HTML from root")
+            return html_content
+        except Exception as e:
+            logger.error(f"Error reading index.html: {str(e)}")
+            return "<h1>Error loading website</h1>"
+    else:
+        logger.warning(f"index.html not found at {index_file}")
+        # Fallback API response
+        return """
+        <h1>AI Agent API</h1>
+        <p>Frontend not found. Available endpoints:</p>
+        <ul>
+            <li><a href="/health">/health</a> - Health check</li>
+            <li><a href="/docs">/docs</a> - API documentation</li>
+            <li>/chat - Chat endpoint (POST)</li>
+            <li>/metrics - Prometheus metrics</li>
+        </ul>
+        """
 
 if __name__ == "__main__":
     import uvicorn
