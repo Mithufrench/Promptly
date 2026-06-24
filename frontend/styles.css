@@ -1,29 +1,11 @@
-/* Enhanced Prompt-to-Prod Frontend Styles */
+/* Enhanced Prompt-to-Prod Frontend Styles - Merged & Optimized */
 
 * {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
 }
-<<<<<<< HEAD
 
-=======
-:root {
-    --primary: #6366f1;
-    --secondary: #ec4899;
-    --dark-bg: #0f172a;
-    --card-bg: #1e293b;
-    --text-primary: #f1f5f9;
-    --text-secondary: #cbd5e1;
-    --border: #334155;
-    --success: #10b981;
-    --accent: #00ff9f;
-}
-
-html {
-    scroll-behavior: smooth;
-}
->>>>>>> 192265a81b1452055b63b083d005eda6e7857ec4
 body {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     line-height: 1.6;
@@ -35,18 +17,14 @@ body {
 /* ==================== NAVBAR ==================== */
 
 .navbar {
-<<<<<<< HEAD
     background: linear-gradient(90deg, #2c3e50, #34495e);
-=======
-    background: rgba(15, 23, 42, 0.95);
-    backdrop-filter: blur(12px);
->>>>>>> 192265a81b1452055b63b083d005eda6e7857ec4
     padding: 1rem 0;
     position: sticky;
     top: 0;
     z-index: 1000;
     box-shadow: 0 2px 10px rgba(0,0,0,0.1);
 }
+
 .nav-container {
     max-width: 1200px;
     margin: 0 auto;
@@ -55,15 +33,15 @@ body {
     align-items: center;
     padding: 0 2rem;
 }
+
 .logo {
     display: flex;
     align-items: center;
     gap: 0.5rem;
     color: white;
     font-weight: bold;
-    font-size: 1.6rem;
+    font-size: 1.5rem;
 }
-<<<<<<< HEAD
 
 .logo-icon {
     font-size: 2rem;
@@ -75,28 +53,21 @@ body {
     50% { opacity: 0.7; }
 }
 
-=======
-.logo-icon { font-size: 2.2rem; }
->>>>>>> 192265a81b1452055b63b083d005eda6e7857ec4
 .nav-menu {
     display: flex;
     list-style: none;
     gap: 2rem;
 }
+
 .nav-link {
     color: white;
     text-decoration: none;
     transition: color 0.3s;
 }
-<<<<<<< HEAD
 
 .nav-link:hover,
 .nav-link.active {
     color: #3498db;
-=======
-.nav-link:hover, .nav-link.active {
-    color: var(--primary);
->>>>>>> 192265a81b1452055b63b083d005eda6e7857ec4
 }
 
 /* ==================== HERO SECTION ==================== */
@@ -141,6 +112,8 @@ body {
     border-radius: 5px;
     font-size: 1rem;
     background: white;
+    min-height: 100px;
+    resize: vertical;
 }
 
 .hero-prompt-button {
@@ -152,6 +125,7 @@ body {
     cursor: pointer;
     font-size: 1.2rem;
     transition: background 0.3s;
+    height: 100%;
 }
 
 .hero-prompt-button:hover {
@@ -180,49 +154,50 @@ body {
     cursor: pointer;
     font-size: 1rem;
     transition: all 0.3s;
-<<<<<<< HEAD
     font-weight: 600;
-=======
->>>>>>> 192265a81b1452055b63b083d005eda6e7857ec4
 }
+
 .btn-primary {
     background: #3498db;
     color: white;
 }
+
 .btn-primary:hover {
-<<<<<<< HEAD
     background: #2980b9;
     transform: translateY(-2px);
     box-shadow: 0 5px 15px rgba(52, 152, 219, 0.3);
-=======
-    transform: translateY(-3px);
-    box-shadow: 0 10px 25px rgba(99, 102, 241, 0.4);
->>>>>>> 192265a81b1452055b63b083d005eda6e7857ec4
 }
+
 .btn-secondary {
     background: transparent;
     color: white;
     border: 2px solid white;
 }
+
 .btn-secondary:hover {
     background: white;
     color: #667eea;
 }
-.btn-small { padding: 0.5rem 1rem; font-size: 0.875rem; }
+
+.btn-small {
+    padding: 0.5rem 1rem;
+    font-size: 0.875rem;
+}
+
 .btn-chat {
     background: #27ae60;
     color: white;
-<<<<<<< HEAD
 }
 
 .btn-chat:hover {
     background: #229954;
-=======
->>>>>>> 192265a81b1452055b63b083d005eda6e7857ec4
 }
-.btn-chat:hover { background: var(--secondary); }
 
-<<<<<<< HEAD
+.btn-prompt {
+    width: 100%;
+    padding: 1rem;
+}
+
 .action-btn {
     width: 100%;
     padding: 0.75rem;
@@ -254,158 +229,12 @@ body {
     color: #2c3e50;
 }
 
-=======
-/* Hero */
-.hero {
-    text-align: center;
-    padding: 7rem 2rem 5rem;
-    max-width: 1200px;
-    margin: 0 auto;
-}
-.hero h1 {
-    font-size: 3.8rem;
-    margin-bottom: 1rem;
-    background: linear-gradient(135deg, var(--primary), var(--accent));
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-}
-.highlight { color: var(--accent); font-weight: 700; }
-.hero-subtitle {
-    font-size: 1.35rem;
-    color: var(--text-secondary);
-    margin-bottom: 2rem;
-}
-.trust-badges {
-    display: flex;
-    gap: 1.5rem;
-    justify-content: center;
-    flex-wrap: wrap;
-    margin-top: 2rem;
-    font-size: 1rem;
-}
-.trust-badges span {
-    background: rgba(16, 185, 129, 0.1);
-    color: var(--accent);
-    padding: 0.4rem 1rem;
-    border-radius: 9999px;
-    border: 1px solid rgba(16, 185, 129, 0.3);
-}
-
-/* Hero Prompt Box */
-.hero-prompt-box {
-    display: flex;
-    flex-direction: column;
-    gap: 1rem;
-    margin: 2.5rem auto;
-    max-width: 820px;
-    background: linear-gradient(135deg, rgba(99, 102, 241, 0.15), rgba(236, 72, 153, 0.08));
-    padding: 2rem;
-    border-radius: 1.25rem;
-    border: 2px solid rgba(99, 102, 241, 0.4);
-    backdrop-filter: blur(12px);
-    box-shadow: 0 10px 40px rgba(99, 102, 241, 0.15);
-}
-.hero-prompt-input {
-    width: 100%;
-    padding: 1.5rem;
-    background: rgba(255, 255, 255, 0.08);
-    border: 1.5px solid rgba(99, 102, 241, 0.6);
-    border-radius: 0.75rem;
-    color: var(--text-primary);
-    font-size: 1.1rem;
-    min-height: 140px;
-    resize: vertical;
-}
-.hero-prompt-input:focus {
-    border-color: var(--accent);
-    box-shadow: 0 0 30px rgba(0, 255, 159, 0.25);
-}
-.btn-prompt {
-    padding: 1.25rem 2.5rem;
-    font-weight: 700;
-    font-size: 1.15rem;
-    width: 100%;
-}
-
-/* Architecture */
-.architecture {
-    padding: 6rem 2rem;
-    background: rgba(30, 41, 59, 0.6);
-    text-align: center;
-}
-.arch-container {
-    max-width: 1000px;
-    margin: 2rem auto;
-}
-.arch-diagram {
-    width: 100%;
-    max-width: 900px;
-    border-radius: 1rem;
-    border: 2px solid var(--border);
-    box-shadow: 0 15px 40px rgba(0, 0, 0, 0.4);
-}
-
-/* DevOps Showcase */
-.showcase {
-    padding: 6rem 2rem;
-    background: var(--dark-bg);
-}
-.showcase h2, .features h2, .dashboard h2, .docs h2 {
-    text-align: center;
-    font-size: 2.6rem;
-    margin-bottom: 1.5rem;
-}
-.section-desc {
-    text-align: center;
-    color: var(--text-secondary);
-    font-size: 1.1rem;
-    max-width: 700px;
-    margin: 0 auto 3rem;
-}
-.showcase-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
-    gap: 2rem;
-    max-width: 1200px;
-    margin: 0 auto;
-}
-.code-card {
-    background: var(--card-bg);
-    border: 1px solid var(--border);
-    border-radius: 1rem;
-    padding: 1.8rem;
-    transition: all 0.3s;
-}
-.code-card:hover {
-    transform: translateY(-6px);
-    border-color: var(--accent);
-    box-shadow: 0 15px 35px rgba(0, 255, 159, 0.15);
-}
-.code-card pre {
-    background: #0a0f1c;
-    padding: 1.2rem;
-    border-radius: 0.75rem;
-    overflow-x: auto;
-    font-size: 0.9rem;
-    margin-bottom: 1rem;
-    border: 1px solid #1e2937;
-}
-.code-card code {
-    font-family: 'SF Mono', Monaco, monospace;
-    line-height: 1.5;
-}
-
-/* Rest of your original styles (Features, Dashboard, etc.) remain enhanced */
-.features {
-    padding: 6rem 2rem;
-    background: rgba(30, 41, 59, 0.5);
-}
->>>>>>> 192265a81b1452055b63b083d005eda6e7857ec4
 .features-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
     gap: 2rem;
 }
+
 .feature-card {
     background: white;
     padding: 2rem;
@@ -414,8 +243,8 @@ body {
     box-shadow: 0 5px 15px rgba(0,0,0,0.1);
     transition: transform 0.3s;
 }
+
 .feature-card:hover {
-<<<<<<< HEAD
     transform: translateY(-5px);
     box-shadow: 0 10px 25px rgba(0,0,0,0.15);
 }
@@ -434,6 +263,83 @@ body {
     color: #7f8c8d;
 }
 
+/* ==================== ARCHITECTURE SECTION ==================== */
+
+.architecture {
+    padding: 4rem 2rem;
+    background: #f8f9fa;
+    text-align: center;
+}
+
+.architecture h2 {
+    font-size: 2.5rem;
+    margin-bottom: 2rem;
+    color: #2c3e50;
+}
+
+.arch-diagram {
+    max-width: 800px;
+    margin: 0 auto;
+    border-radius: 10px;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+}
+
+/* ==================== SHOWCASE SECTION ==================== */
+
+.showcase {
+    padding: 4rem 2rem;
+    background: #2c3e50;
+    color: white;
+}
+
+.showcase h2 {
+    text-align: center;
+    font-size: 2.5rem;
+    margin-bottom: 3rem;
+    color: white;
+}
+
+.showcase-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 2rem;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.code-card {
+    background: #34495e;
+    border: 1px solid #7f8c8d;
+    border-radius: 10px;
+    padding: 1.5rem;
+    transition: all 0.3s;
+}
+
+.code-card:hover {
+    transform: translateY(-5px);
+    border-color: #3498db;
+    box-shadow: 0 10px 25px rgba(52, 152, 219, 0.2);
+}
+
+.code-card h3 {
+    margin-bottom: 1rem;
+    color: #3498db;
+}
+
+.code-card pre {
+    background: #2c3e50;
+    padding: 1rem;
+    border-radius: 5px;
+    overflow-x: auto;
+    margin-bottom: 1rem;
+}
+
+.code-card code {
+    font-family: 'Courier New', monospace;
+    color: #ecf0f1;
+    font-size: 0.9rem;
+}
+
 /* ==================== DASHBOARD ==================== */
 
 .dashboard {
@@ -446,25 +352,15 @@ body {
     font-size: 2.5rem;
     margin-bottom: 3rem;
     color: #2c3e50;
-=======
-    transform: translateY(-8px);
-    border-color: var(--accent);
-    box-shadow: 0 15px 35px rgba(99, 102, 241, 0.15);
->>>>>>> 192265a81b1452055b63b083d005eda6e7857ec4
 }
 
-/* Dashboard, Chat, Metrics, Docs - keeping your original + minor polish */
-.dashboard { padding: 6rem 2rem; }
 .dashboard-container {
     max-width: 1400px;
     margin: 0 auto;
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 2rem;
-    max-width: 1400px;
-    margin: 0 auto;
 }
-<<<<<<< HEAD
 
 @media (max-width: 1024px) {
     .dashboard-container {
@@ -472,8 +368,6 @@ body {
     }
 }
 
-=======
->>>>>>> 192265a81b1452055b63b083d005eda6e7857ec4
 .panel {
     background: white;
     border-radius: 10px;
@@ -481,7 +375,6 @@ body {
     box-shadow: 0 5px 15px rgba(0,0,0,0.1);
     border-left: 4px solid #3498db;
 }
-<<<<<<< HEAD
 
 .panel h3 {
     margin-bottom: 1rem;
@@ -676,35 +569,16 @@ body {
     color: #667eea;
     font-family: 'Courier New', monospace;
     font-size: 0.875rem;
-=======
-.chat-messages {
-    height: 320px;
-    overflow-y: auto;
-    background: rgba(0, 0, 0, 0.25);
-    border-radius: 0.75rem;
-    padding: 1rem;
-}
-.message-content {
-    padding: 0.85rem 1.1rem;
-    border-radius: 0.75rem;
->>>>>>> 192265a81b1452055b63b083d005eda6e7857ec4
 }
 
 /* ==================== FOOTER ==================== */
 
 .footer {
-<<<<<<< HEAD
     background: #2c3e50;
     color: white;
-=======
-    background: rgba(0, 0, 0, 0.4);
-    border-top: 1px solid var(--border);
-    padding: 2.5rem;
->>>>>>> 192265a81b1452055b63b083d005eda6e7857ec4
     text-align: center;
     padding: 2rem;
 }
-<<<<<<< HEAD
 
 .footer a {
     color: #3498db;
@@ -749,29 +623,11 @@ body {
     background: #f1f1f1;
 }
 
-=======
-.footer a { color: var(--primary); }
-
-/* Responsive */
-@media (max-width: 768px) {
-    .hero h1 { font-size: 2.7rem; }
-    .dashboard-container { grid-template-columns: 1fr; }
-    .hero-buttons { flex-direction: column; }
-    .nav-menu { gap: 1rem; font-size: 0.95rem; }
-}
-
-/* Scrollbar */
-::-webkit-scrollbar { width: 8px; }
->>>>>>> 192265a81b1452055b63b083d005eda6e7857ec4
 ::-webkit-scrollbar-thumb {
     background: #888;
     border-radius: 4px;
 }
-<<<<<<< HEAD
 
 ::-webkit-scrollbar-thumb:hover {
     background: #555;
 }
-=======
-::-webkit-scrollbar-thumb:hover { background: var(--secondary); }
->>>>>>> 192265a81b1452055b63b083d005eda6e7857ec4

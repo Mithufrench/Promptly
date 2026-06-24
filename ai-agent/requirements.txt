@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 fastapi==0.104.1
 uvicorn==0.24.0
 pydantic==2.5.0
@@ -8,10 +7,3 @@ groq==0.9.0
 httpx==0.25.0
 websockets==12.0
 aiofiles==23.2.0
-=======
-fastapi
-uvicorn[standard]
-groq
-pydantic
-python-dotenv
->>>>>>> 192265a81b1452055b63b083d005eda6e7857ec4

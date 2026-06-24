@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Prompt-to-Prod - AI-Powered DevOps Platform</title>
+    <title>Prompt-to-Prod - AI DevOps Platform</title>
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
@@ -18,7 +18,7 @@
                 <li><a href="#home" class="nav-link active">Home</a></li>
                 <li><a href="#features" class="nav-link">Features</a></li>
                 <li><a href="#architecture" class="nav-link">Architecture</a></li>
-                <li><a href="#showcase" class="nav-link">DevOps Showcase</a></li>
+                <li><a href="#showcase" class="nav-link">DevOps</a></li>
                 <li><a href="#dashboard" class="nav-link">Dashboard</a></li>
                 <li><a href="#docs" class="nav-link">API</a></li>
             </ul>
@@ -28,46 +28,20 @@
     <!-- Hero -->
     <section id="home" class="hero">
         <div class="hero-content">
-<<<<<<< HEAD
             <h1>Prompt-to-Prod</h1>
             <p class="hero-subtitle">AI DevOps Platform</p>
             
             <!-- Hero Prompt Box -->
             <div class="hero-prompt-box">
-                <div class="prompt-input-group">
-                    <input type="text" 
-                           id="hero-prompt-input" 
-                           class="hero-prompt-input" 
-                           placeholder="Ask anything about DevOps..."
-                           onkeypress="handleHeroPromptEnter(event)">
-                    <button class="hero-prompt-button" onclick="sendHeroPrompt()">→</button>
-                </div>
+                <textarea id="hero-prompt-input" class="hero-prompt-input" 
+                          placeholder="E.g., Generate a CI/CD pipeline for a Node.js app with Docker & Kubernetes..." rows="4"></textarea>
+                <button class="btn btn-primary btn-prompt" onclick="sendHeroPrompt()">Generate Pipeline →</button>
             </div>
             
             <p class="hero-description">Automate infrastructure with intelligent AI assistance</p>
             <div class="hero-buttons">
                 <button class="btn btn-primary" onclick="scrollTo('dashboard')">Try Dashboard</button>
                 <button class="btn btn-secondary" onclick="testAPI()">Test API</button>
-=======
-            <h1>From <span class="highlight">Prompt</span> to <span class="highlight">Production</span></h1>
-            <p class="hero-subtitle">AI-Powered DevOps Platform • Real-time Infrastructure Automation</p>
-            
-            <div class="hero-prompt-box">
-                <textarea id="hero-prompt-input" class="hero-prompt-input" 
-                          placeholder="E.g., Generate a CI/CD pipeline for a Node.js app with Docker & Kubernetes..." rows="4"></textarea>
-                <button class="btn btn-primary btn-prompt" onclick="sendHeroPrompt()">Generate Pipeline →</button>
-            </div>
-
-            <div class="hero-buttons">
-                <button class="btn btn-primary" onclick="scrollTo('dashboard')">Try AI Chat Now</button>
-                <button class="btn btn-secondary" onclick="window.open('https://github.com/Mithufrench/Prompt-to-Prod', '_blank')">View GitHub Repo</button>
-            </div>
-
-            <div class="trust-badges">
-                <span>🚀 Live on Railway</span>
-                <span>🤖 AI DevOps Assistant</span>
-                <span>🔧 Production Ready</span>
->>>>>>> 192265a81b1452055b63b083d005eda6e7857ec4
             </div>
         </div>
     </section>
@@ -78,23 +52,33 @@
         <div class="features-grid">
             <div class="feature-card">
                 <div class="feature-icon">🤖</div>
-                <h3>Intelligent AI Agent</h3>
-                <p>Generate pipelines, Terraform, Dockerfiles & best practices instantly</p>
+                <h3>AI Assistant</h3>
+                <p>Get instant DevOps guidance and automation</p>
             </div>
             <div class="feature-card">
                 <div class="feature-icon">📊</div>
-                <h3>Live Monitoring</h3>
-                <p>Real-time metrics and system health</p>
+                <h3>Monitoring</h3>
+                <p>Real-time system metrics</p>
             </div>
             <div class="feature-card">
                 <div class="feature-icon">⚡</div>
-                <h3>End-to-End Automation</h3>
-                <p>From idea to production deployment</p>
+                <h3>Fast & Reliable</h3>
+                <p>Sub-second responses</p>
             </div>
             <div class="feature-card">
-                <div class="feature-icon">🔌</div>
-                <h3>Full REST API</h3>
-                <p>Integrate into your own workflows</p>
+                <div class="feature-icon">🔧</div>
+                <h3>Full API</h3>
+                <p>Complete REST endpoints</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">💬</div>
+                <h3>Chat Interface</h3>
+                <p>Natural language queries</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">🚀</div>
+                <h3>Production Ready</h3>
+                <p>Enterprise-grade platform</p>
             </div>
         </div>
     </section>
@@ -103,20 +87,17 @@
     <section id="architecture" class="architecture">
         <h2>Architecture</h2>
         <div class="arch-container">
-            <img src="https://via.placeholder.com/800x400/1a1a2e/00ff9f?text=Prompt-to-Prod+Architecture+Diagram" 
-                 alt="System Architecture" class="arch-diagram">
-            <p><strong>Frontend:</strong> HTML + Tailwind | <strong>Backend:</strong> FastAPI/Python | <strong>AI:</strong> LLM Integration | <strong>Hosting:</strong> Railway</p>
+            <p><strong>Frontend:</strong> HTML + CSS + JavaScript | <strong>Backend:</strong> FastAPI/Python | <strong>AI:</strong> Groq LLM | <strong>Hosting:</strong> Railway</p>
         </div>
     </section>
 
     <!-- DevOps Showcase -->
     <section id="showcase" class="showcase">
-        <h2>DevOps Showcase</h2>
-        <p class="section-desc">Real examples you can copy and use</p>
+        <h2>DevOps Examples</h2>
         
         <div class="showcase-grid">
             <div class="code-card">
-                <h3>GitHub Actions CI/CD</h3>
+                <h3>GitHub Actions Pipeline</h3>
                 <pre><code id="gha-code">name: CI/CD Pipeline
 on: [push]
 jobs:
@@ -124,37 +105,44 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Build & Push Docker
+      - name: Build & Push
         run: docker build -t myapp .</code></pre>
                 <button class="btn btn-small" onclick="copyCode('gha-code')">Copy</button>
             </div>
 
             <div class="code-card">
-                <h3>Terraform (AWS)</h3>
+                <h3>Terraform AWS</h3>
                 <pre><code id="tf-code">resource "aws_ecs_cluster" "main" {
-  name = "prompt-to-prod-cluster"
+  name = "my-cluster"
+}
+
+resource "aws_s3_bucket" "app" {
+  bucket = "my-app-bucket"
 }</code></pre>
                 <button class="btn btn-small" onclick="copyCode('tf-code')">Copy</button>
             </div>
 
             <div class="code-card">
-                <h3>Dockerfile Example</h3>
-                <pre><code id="docker-code">FROM node:20-alpine
-COPY . /app
+                <h3>Dockerfile</h3>
+                <pre><code id="docker-code">FROM python:3.11-slim
 WORKDIR /app
-CMD ["npm", "start"]</code></pre>
+COPY requirements.txt .
+RUN pip install -r requirements.txt
+COPY . .
+CMD ["python", "main.py"]</code></pre>
                 <button class="btn btn-small" onclick="copyCode('docker-code')">Copy</button>
             </div>
         </div>
     </section>
 
-    <!-- Dashboard (kept mostly same but improved) -->
+    <!-- Dashboard -->
     <section id="dashboard" class="dashboard">
         <h2>Interactive Dashboard</h2>
-        <!-- Your existing dashboard content remains here -->
+        
         <div class="dashboard-container">
             <!-- Left Panel -->
             <div class="dashboard-left">
+                <!-- Status Panel -->
                 <div class="panel status-panel">
                     <h3>System Status</h3>
                     <div class="status-item">
@@ -165,43 +153,108 @@ CMD ["npm", "start"]</code></pre>
                         <span>Health:</span>
                         <span class="badge badge-healthy" id="health-badge">● Healthy</span>
                     </div>
+                    <div class="status-item">
+                        <span>Version:</span>
+                        <span id="version-text">3.0.0</span>
+                    </div>
                     <button class="btn btn-small" onclick="checkHealth()">Check Status</button>
                 </div>
 
-                <!-- AI Chat -->
+                <!-- Chat Panel -->
                 <div class="panel chat-panel">
-                    <h3>💬 AI DevOps Assistant</h3>
+                    <h3>💬 AI Chat</h3>
                     <div class="chat-messages" id="chat-messages">
                         <div class="message bot-message">
-                            <div class="message-content">Hi! Ask me to generate a CI/CD pipeline, Terraform config, Kubernetes manifest, or any DevOps question.</div>
+                            <div class="message-content">Hello! Ask me anything about DevOps, infrastructure, or deployment.</div>
                         </div>
                     </div>
                     <div class="chat-input-wrapper">
-                        <input type="text" id="chat-input" class="chat-input" placeholder="E.g., Generate Terraform for an S3 bucket...">
+                        <input type="text" id="chat-input" class="chat-input" placeholder="Ask a DevOps question...">
                         <button class="btn btn-chat" onclick="sendMessage()">Send</button>
                     </div>
                 </div>
             </div>
 
-            <!-- Right Panel (your existing metrics + quick actions) -->
+            <!-- Right Panel -->
             <div class="dashboard-right">
-                <!-- Keep your existing metrics and quick actions panels -->
-                ... (your original right panel code) ...
+                <!-- Metrics Panel -->
+                <div class="panel metrics-panel">
+                    <h3>📊 Metrics</h3>
+                    <div class="metric-item">
+                        <span>Requests:</span>
+                        <span id="metric-requests">0</span>
+                    </div>
+                    <div class="metric-item">
+                        <span>Errors:</span>
+                        <span id="metric-errors">0</span>
+                    </div>
+                    <div class="metric-item">
+                        <span>Status:</span>
+                        <span id="metric-status">Running</span>
+                    </div>
+                    <button class="btn btn-small" onclick="getMetrics()">Refresh</button>
+                </div>
+
+                <!-- Quick Actions -->
+                <div class="panel actions-panel">
+                    <h3>Quick Actions</h3>
+                    <button class="action-btn" onclick="checkHealth()">🏥 Health Check</button>
+                    <button class="action-btn" onclick="getMetrics()">📈 Get Metrics</button>
+                    <button class="action-btn" onclick="openDocs()">📖 API Docs</button>
+                    <button class="action-btn" onclick="askAI('Generate a Docker pipeline')">❓ Example Query</button>
+                </div>
+
+                <!-- Endpoints Panel -->
+                <div class="panel endpoints-panel">
+                    <h3>API Endpoints</h3>
+                    <div class="endpoint">
+                        <code>GET /health</code>
+                    </div>
+                    <div class="endpoint">
+                        <code>POST /chat</code>
+                    </div>
+                    <div class="endpoint">
+                        <code>GET /agents</code>
+                    </div>
+                    <div class="endpoint">
+                        <code>GET /metrics</code>
+                    </div>
+                </div>
             </div>
         </div>
     </section>
 
-    <!-- API Docs (kept) -->
+    <!-- API Docs -->
     <section id="docs" class="docs">
-        <!-- Your original docs section -->
+        <h2>API Documentation</h2>
+        
+        <div class="doc-grid">
+            <div class="doc-card">
+                <h3>GET /health</h3>
+                <p>Check API health status</p>
+                <pre><code>curl https://your-app.up.railway.app/health</code></pre>
+                <button class="btn btn-small" onclick="testEndpoint('/health')">Test</button>
+            </div>
+
+            <div class="doc-card">
+                <h3>POST /chat</h3>
+                <p>Chat with AI assistant</p>
+                <pre><code>{"query":"Generate a CI/CD pipeline"}</code></pre>
+                <button class="btn btn-small" onclick="testEndpoint('/chat')">Test</button>
+            </div>
+
+            <div class="doc-card">
+                <h3>GET /metrics</h3>
+                <p>Get system metrics</p>
+                <pre><code>curl https://your-app.up.railway.app/metrics</code></pre>
+                <button class="btn btn-small" onclick="testEndpoint('/metrics')">Test</button>
+            </div>
+        </div>
     </section>
 
     <!-- Footer -->
     <footer class="footer">
-        <p>
-            &copy; 2026 Prompt-to-Prod • Built as a DevOps Portfolio Project 
-            | <a href="https://github.com/Mithufrench/Prompt-to-Prod" target="_blank">GitHub</a>
-        </p>
+        <p>&copy; 2024 Prompt-to-Prod AI DevOps Platform | <a href="https://github.com/Mithufrench/Prompt-to-Prod">GitHub</a></p>
     </footer>
 
     <script src="script.js"></script>
