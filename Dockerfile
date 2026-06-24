@@ -29,4 +29,4 @@ USER appuser
 EXPOSE 8000
 
 # Start application - reads PORT from environment
-CMD ["python", "-u", "ai-agent/main.py"]
+CMD ["python", "-u", "main.py"]
