@@ -1,6 +1,6 @@
 """
 Prompt-to-Prod - AI DevOps Platform with Advanced Groq LLM Integration
-Enhanced AI Agent for Real Architecture Outcomes
+Enhanced AI Agent for Real Architecture Outcomes - v3.1 (Updated Model)
 """
 from fastapi import FastAPI
 from starlette.staticfiles import StaticFiles
@@ -23,7 +23,7 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-app = FastAPI(title="Prompt-to-Prod AI DevOps", version="3.0.0")
+app = FastAPI(title="Prompt-to-Prod AI DevOps", version="3.1.0")
 
 # Add CORS middleware
 app.add_middleware(
@@ -36,14 +36,15 @@ app.add_middleware(
 
 # Initialize Groq client
 GROQ_API_KEY = os.getenv("GROQ_API_KEY")
-MODEL = os.getenv("MODEL", "mixtral-8x7b-32768")
+# Updated: mixtral-8x7b-32768 was decommissioned, use llama-3.1-70b-versatile instead
+MODEL = os.getenv("MODEL", "llama-3.1-70b-versatile")
 
 if not GROQ_API_KEY:
     logger.warning("⚠️  GROQ_API_KEY not set. Set it as an environment variable.")
     client = None
 else:
     client = Groq(api_key=GROQ_API_KEY)
-    logger.info("✅ Groq client initialized with Mixtral 8x7B model")
+    logger.info(f"✅ Groq client initialized with {MODEL} model")
 
 # ==================== AI SYSTEM PROMPTS ====================
 
@@ -273,7 +274,7 @@ async def health_check():
     return {
         "status": "healthy",
         "service": "ai-devops-platform",
-        "version": "3.0.0",
+        "version": "3.1.0",
         "llm": "groq",
         "model": MODEL,
         "ai_agents": list(SYSTEM_PROMPTS.keys())
@@ -409,10 +410,11 @@ if __name__ == "__main__":
     port = int(os.getenv("PORT", 8000))
     
     logger.info(f"=" * 60)
-    logger.info(f"🚀 Starting Prompt-to-Prod AI DevOps Agent v3.0")
+    logger.info(f"🚀 Starting Prompt-to-Prod AI DevOps Agent v3.1")
     logger.info(f"🔧 Environment: {os.getenv('ENVIRONMENT', 'development')}")
     logger.info(f"📊 Port: {port}")
     logger.info(f"🤖 LLM Model: {MODEL}")
+    logger.info(f"   (Note: mixtral-8x7b-32768 was decommissioned)")
     logger.info(f"🔑 Groq API Key: {'✅ Set' if GROQ_API_KEY else '❌ Not set'}")
     logger.info(f"🧠 AI Agents Available: {len(SYSTEM_PROMPTS)}")
     logger.info(f"  - DevOps Expert")
