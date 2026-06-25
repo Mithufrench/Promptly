@@ -165,6 +165,14 @@ def process_query_with_groq(query: str, agent_type: str = "devops_expert",
         
         messages = []
         
+        # Add system message as first message (Groq expects system in messages array)
+        system_prompt = get_system_prompt(agent_type)
+        messages.append({
+            "role": "system",
+            "content": system_prompt
+        })
+        
+        # Add conversation history
         if conversation_history:
             for msg in conversation_history:
                 messages.append({
@@ -172,17 +180,16 @@ def process_query_with_groq(query: str, agent_type: str = "devops_expert",
                     "content": msg.content
                 })
         
+        # Add current query
         messages.append({
             "role": "user",
             "content": query
         })
         
-        system_prompt = get_system_prompt(agent_type)
-        
+        # Call Groq API WITHOUT system parameter (it's in messages)
         response = client.chat.completions.create(
             model=MODEL,
             max_tokens=2048,
-            system=system_prompt,
             messages=messages
         )
         
@@ -235,11 +242,15 @@ Provide a comprehensive architecture including:
 
 Format with clear sections and actionable recommendations."""
 
+        messages = [
+            {"role": "system", "content": SYSTEM_PROMPTS["architect"]},
+            {"role": "user", "content": prompt}
+        ]
+        
         response = client.chat.completions.create(
             model=MODEL,
             max_tokens=3000,
-            system=SYSTEM_PROMPTS["architect"],
-            messages=[{"role": "user", "content": prompt}]
+            messages=messages
         )
         
         return {
@@ -315,11 +326,15 @@ Choose from: devops_expert, architect, kubernetes_expert, infrastructure_coder, 
 
 Return ONLY the agent type name, nothing else."""
 
+        messages = [
+            {"role": "system", "content": agent_selector_prompt},
+            {"role": "user", "content": query.query}
+        ]
+        
         response = client.chat.completions.create(
             model=MODEL,
             max_tokens=50,
-            system=agent_selector_prompt,
-            messages=[{"role": "user", "content": query.query}]
+            messages=messages
         )
         
         recommended = response.choices[0].message.content.strip().lower()
