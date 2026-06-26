@@ -2,9 +2,22 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="description" content="Promptly - AI DevOps Assistant. From Prompt to Production, Instantly.">
+    <meta name="theme-color" content="#1a1a2e">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Promptly">
+    <meta name="apple-mobile-web-app-icon" content="/icon-192x192.png">
+    <meta name="msapplication-TileColor" content="#1a1a2e">
+    <meta name="msapplication-TileImage" content="/icon-192x192.png">
+    
     <title>Promptly - AI DevOps Assistant</title>
     <link rel="stylesheet" href="styles.css">
+    <link rel="manifest" href="/manifest.json">
+    <link rel="icon" type="image/png" href="/icon-192x192.png">
+    <link rel="apple-touch-icon" href="/icon-192x192.png">
+    <link rel="icon" type="image/svg+xml" href="/icon.svg">
 </head>
 <body>
     <!-- Navigation -->
@@ -28,8 +41,8 @@
     <!-- Hero -->
     <section id="home" class="hero">
         <div class="hero-content">
-            <h1>Promptly</h1>
-            <p class="hero-subtitle">AI-Powered DevOps Assistant</p>
+            <h1>Promptly — AI DevOps Assistant</h1>
+            <p class="hero-subtitle">From Prompt to Production, Instantly</p>
             
             <!-- Hero Prompt Box -->
             <div class="hero-prompt-box">
@@ -254,9 +267,16 @@ CMD ["python", "main.py"]</code></pre>
 
     <!-- Footer -->
     <footer class="footer">
-        <p>&copy; 2024 Prompt-to-Prod AI DevOps Platform | <a href="https://github.com/Mithufrench/Prompt-to-Prod">GitHub</a></p>
+        <p>&copy; 2024 Promptly - AI DevOps Assistant | <a href="https://github.com/Mithufrench/Prompt-to-Prod">GitHub</a></p>
     </footer>
 
     <script src="script.js"></script>
+    <script>
+        // Register Service Worker for PWA
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('/sw.js').catch(err => console.log('SW registration failed:', err));
+        }
+    </script>
 </body>
 </html>
+
