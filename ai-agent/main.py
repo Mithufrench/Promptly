@@ -36,7 +36,7 @@ app.add_middleware(
 
 # Initialize Groq client
 GROQ_API_KEY = os.getenv("GROQ_API_KEY")
-MODEL = os.getenv("MODEL", "llama-3.1-70b-versatile")
+MODEL = os.getenv("MODEL", "llama-3.3-70b-versatile")
 
 if not GROQ_API_KEY:
     logger.warning("⚠️  GROQ_API_KEY not set. Set it as an environment variable.")
@@ -419,7 +419,7 @@ if __name__ == "__main__":
     logger.info(f"🧠 AI Agents: 5 specialized agents available")
     logger.info(f"✨ Promptly Features:")
     logger.info(f"  ✓ Multi-agent AI system with 5 specialized agents")
-    logger.info(f"  ✓ Real-time Groq LLM integration (llama-3.1-70b-versatile)")
+    logger.info(f"  ✓ Real-time Groq LLM integration (llama-3.3-70b-versatile)")
     logger.info(f"  ✓ Conversation memory & context awareness")
     logger.info(f"  ✓ DevOps architecture & system design")
     logger.info(f"  ✓ Intelligent agent routing & recommendations")

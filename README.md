@@ -14,7 +14,7 @@
   - Security Specialist: Security architecture, compliance
 
 - **⚡ Real-Time AI Responses**
-  - Powered by Groq's llama-3.1-70b-versatile model
+  - Powered by Groq's llama-3.3-70b-versatile model
   - Sub-second response times
   - Conversation memory & context awareness
 
@@ -122,7 +122,7 @@ pip install -r ai-agent/requirements.txt
 
 # 4. Set environment variables
 export GROQ_API_KEY="your_actual_key"
-export MODEL="llama-3.1-70b-versatile"
+export MODEL="llama-3.3-70b-versatile"
 export PORT=8000
 
 # 5. Run the application
@@ -226,7 +226,7 @@ curl https://your-promptly-domain.railway.app/metrics
 ```env
 # Groq LLM Configuration
 GROQ_API_KEY=gsk_your_actual_api_key          # Required!
-MODEL=llama-3.1-70b-versatile                 # AI model
+MODEL=llama-3.3-70b-versatile                 # AI model
 
 # Server Configuration
 PORT=8000                                      # Port (auto-assigned on Railway)
@@ -300,7 +300,7 @@ Expected response:
   "name": "Promptly",
   "version": "3.1.0",
   "llm": "groq",
-  "model": "llama-3.1-70b-versatile",
+  "model": "llama-3.3-70b-versatile",
   "ai_agents": ["devops_expert", "architect", "kubernetes_expert", "infrastructure_coder", "security_specialist"]
 }
 ```
@@ -334,7 +334,7 @@ Expected response:
 ## 📚 Technologies Used
 
 - **Backend**: FastAPI (Python)
-- **AI/LLM**: Groq + llama-3.1-70b-versatile
+- **AI/LLM**: Groq + llama-3.3-70b-versatile
 - **Frontend**: HTML/CSS/JavaScript
 - **Deployment**: Railway, Docker
 - **Infrastructure**: Terraform, Ansible, Kubernetes
