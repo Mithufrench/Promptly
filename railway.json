@@ -6,7 +6,6 @@
   },
   "deploy": {
     "restartPolicyType": "always",
-    "startCommand": "python -u ai-agent/main.py",
     "healthchecks": {
       "readiness": {
         "path": "/health",
