@@ -26,7 +26,7 @@ USER appuser
 # HEALTHCHECK will be managed by railway.toml only
 
 # EXPOSE port - will be overridden by PORT env var at runtime
-EXPOSE 8000
+EXPOSE 8080
 
 # Start application - reads PORT from environment
 CMD ["python", "-u", "ai-agent/main.py"]
