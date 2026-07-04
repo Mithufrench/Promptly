@@ -2,7 +2,6 @@
 Promptly - AI DevOps Platform with Advanced Groq LLM Integration
 Enterprise-Grade AI Assistant for Infrastructure & DevOps - v3.2
 With Cognee Memory Integration for Persistent Agent Memory
-With Dynamic LLM Model Manager for automatic model deprecation handling
 """
 from fastapi import FastAPI
 from starlette.staticfiles import StaticFiles
@@ -17,7 +16,6 @@ from pathlib import Path
 from typing import Optional, List, Dict
 from groq import Groq
 from memory_manager import init_memory_manager, get_memory_manager
-from llm_model_manager import init_model_manager, get_model_manager, handle_model_decommission
 from config import Config
 
 # Configure logging
@@ -39,9 +37,6 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Initialize LLM Model Manager for dynamic model handling
-model_manager = None
-
 # Initialize Groq client
 GROQ_API_KEY = Config.GROQ_API_KEY
 MODEL = Config.MODEL
@@ -55,6 +50,17 @@ else:
 
 # Global memory manager
 memory_mgr = None
+
+# Model tracking for decommissioning
+current_model = MODEL
+model_fallbacks = [
+    "llama-3.3-70b-versatile",
+    "llama-3.1-8b-instant",
+    "openai/gpt-oss-120b",
+    "qwen/qwen3-32b",
+    "openai/gpt-oss-20b",
+    "mixtral-8x7b-32768",
+]
 
 # ==================== AI SYSTEM PROMPTS ====================
 
@@ -157,11 +163,55 @@ class ArchitectureRequest(BaseModel):
     constraints: Optional[str] = None
     technologies: Optional[List[str]] = None
 
-# ==================== AI PROCESSING FUNCTIONS ====================
+# ==================== HELPER FUNCTIONS ====================
 
 def get_system_prompt(agent_type: str) -> str:
     """Get appropriate system prompt for agent type"""
     return SYSTEM_PROMPTS.get(agent_type, SYSTEM_PROMPTS["devops_expert"])
+
+async def try_model_with_fallback(model_to_try: str, messages: List[Dict], max_tokens: int = 2048) -> tuple:
+    """
+    Try using a model, fallback to next one if decommissioned
+    Returns: (success: bool, result_or_error: str, used_model: str)
+    """
+    global current_model
+    
+    models_to_try = [model_to_try] + model_fallbacks
+    
+    for model in models_to_try:
+        try:
+            logger.info(f"Attempting with model: {model}")
+            response = client.chat.completions.create(
+                model=model,
+                max_tokens=max_tokens,
+                messages=messages,
+                temperature=0.7
+            )
+            
+            result = response.choices[0].message.content
+            
+            if model != current_model:
+                logger.warning(f"🔄 Model switched from {current_model} to {model}")
+                current_model = model
+            
+            return (True, result, model)
+            
+        except Exception as e:
+            error_msg = str(e)
+            
+            if "decommissioned" in error_msg.lower():
+                logger.warning(f"⚠️  Model {model} is decommissioned, trying next...")
+                continue
+            elif "invalid_request_error" in error_msg or "model_not_found" in error_msg.lower():
+                logger.warning(f"⚠️  Model {model} not available, trying next...")
+                continue
+            else:
+                logger.error(f"❌ Model {model} error: {error_msg}")
+                return (False, error_msg, model)
+    
+    return (False, "All available models failed", current_model)
+
+# ==================== AI PROCESSING FUNCTIONS ====================
 
 async def process_query_with_groq(query: str, agent_type: str = "devops_expert", 
                            conversation_history: Optional[List[ChatMessage]] = None,
@@ -181,7 +231,7 @@ async def process_query_with_groq(query: str, agent_type: str = "devops_expert",
         messages = []
         from_memory = False
         
-        # Add system message as first message
+        # Add system message
         system_prompt = get_system_prompt(agent_type)
         messages.append({
             "role": "system",
@@ -193,14 +243,14 @@ async def process_query_with_groq(query: str, agent_type: str = "devops_expert",
             try:
                 context = await memory_mgr.get_agent_context(agent_type, session_id)
                 if context:
-                    logger.info(f"Retrieved context from memory for {agent_type}")
+                    logger.info(f"Retrieved context from memory")
                     messages.append({
                         "role": "system",
-                        "content": f"Relevant context from previous interactions:\n{context[:Config.MEMORY_CONTEXT_LIMIT]}"
+                        "content": f"Previous context:\n{context[:Config.MEMORY_CONTEXT_LIMIT]}"
                     })
                     from_memory = True
             except Exception as e:
-                logger.warning(f"Failed to retrieve context from memory: {str(e)}")
+                logger.warning(f"Failed to retrieve memory context: {str(e)}")
         
         # Add conversation history
         if conversation_history:
@@ -216,90 +266,42 @@ async def process_query_with_groq(query: str, agent_type: str = "devops_expert",
             "content": query
         })
         
-        # Get current model (which may have been auto-updated)
-        current_model = model_manager.get_current_model() if model_manager else MODEL
+        # Try to get response with model fallback support
+        success, result, used_model = await try_model_with_fallback(current_model, messages)
         
-        try:
-            # Call Groq API
-            response = client.chat.completions.create(
-                model=current_model,
-                max_tokens=2048,
-                messages=messages
-            )
-            
-            result_text = response.choices[0].message.content
-            logger.info(f"Response generated by {agent_type} agent using {current_model}")
-            
-            # Store conversation in memory if enabled
-            if Config.ENABLE_AGENT_LEARNING and memory_mgr and memory_mgr.enabled:
-                try:
-                    await memory_mgr.remember_conversation(
-                        query=query,
-                        response=result_text,
-                        agent_type=agent_type,
-                        session_id=session_id,
-                        metadata={"model": current_model}
-                    )
-                    logger.info(f"Stored conversation in memory")
-                except Exception as e:
-                    logger.warning(f"Failed to store conversation: {str(e)}")
-            
+        if not success:
             return {
-                "response": result_text,
-                "status": "success",
-                "agent_type": agent_type,
-                "model": current_model,
-                "tokens_used": {
-                    "input": response.usage.prompt_tokens if hasattr(response, 'usage') else 0,
-                    "output": response.usage.completion_tokens if hasattr(response, 'usage') else 0
-                },
-                "from_memory": from_memory
-            }
-        
-        except Exception as e:
-            error_msg = str(e)
-            logger.error(f"Error calling Groq API: {error_msg}")
-            
-            # Check if it's a model decommissioned error
-            if "decommissioned" in error_msg.lower() and model_manager:
-                logger.warning(f"⚠️  Model {current_model} appears to be decommissioned!")
-                new_model = await handle_model_decommission(e)
-                
-                if new_model:
-                    logger.info(f"🔄 Automatically switching to {new_model}")
-                    # Retry with new model
-                    try:
-                        response = client.chat.completions.create(
-                            model=new_model,
-                            max_tokens=2048,
-                            messages=messages
-                        )
-                        result_text = response.choices[0].message.content
-                        logger.info(f"✅ Response generated using fallback model {new_model}")
-                        
-                        return {
-                            "response": result_text,
-                            "status": "success",
-                            "agent_type": agent_type,
-                            "model": new_model,
-                            "tokens_used": {
-                                "input": response.usage.prompt_tokens if hasattr(response, 'usage') else 0,
-                                "output": response.usage.completion_tokens if hasattr(response, 'usage') else 0
-                            },
-                            "from_memory": from_memory
-                        }
-                    except Exception as retry_error:
-                        logger.error(f"Failed to retry with {new_model}: {str(retry_error)}")
-            
-            return {
-                "response": f"Error processing query: {error_msg}",
+                "response": f"Error: {result}",
                 "status": "error",
                 "agent_type": agent_type,
+                "model": used_model,
                 "from_memory": False
             }
         
+        # Store conversation in memory if enabled
+        if Config.ENABLE_AGENT_LEARNING and memory_mgr and memory_mgr.enabled:
+            try:
+                await memory_mgr.remember_conversation(
+                    query=query,
+                    response=result,
+                    agent_type=agent_type,
+                    session_id=session_id,
+                    metadata={"model": used_model}
+                )
+                logger.info(f"Stored conversation in memory")
+            except Exception as e:
+                logger.warning(f"Failed to store in memory: {str(e)}")
+        
+        return {
+            "response": result,
+            "status": "success",
+            "agent_type": agent_type,
+            "model": used_model,
+            "from_memory": from_memory
+        }
+        
     except Exception as e:
-        logger.error(f"Unexpected error in query processing: {str(e)}")
+        logger.error(f"Query processing error: {str(e)}")
         return {
             "response": f"Error: {str(e)}",
             "status": "error",
@@ -321,62 +323,51 @@ Requirements: {requirements}
 {f'Constraints: {constraints}' if constraints else ''}
 
 Provide a comprehensive architecture including:
-1. System architecture overview (describe as ASCII diagram if helpful)
-2. Key components and their responsibilities
+1. System architecture overview
+2. Key components and responsibilities
 3. Data flow between components
 4. Technology recommendations
 5. Scalability approach
-6. Monitoring and observability strategy
+6. Monitoring and observability
 7. Security considerations
 8. Cost optimization tips
 9. Deployment strategy
-10. Next implementation steps
-
-Format with clear sections and actionable recommendations."""
+10. Next implementation steps"""
 
         messages = [
             {"role": "system", "content": SYSTEM_PROMPTS["architect"]},
             {"role": "user", "content": prompt}
         ]
         
-        current_model = model_manager.get_current_model() if model_manager else MODEL
+        success, result, used_model = await try_model_with_fallback(current_model, messages, max_tokens=3000)
         
-        response = client.chat.completions.create(
-            model=current_model,
-            max_tokens=3000,
-            messages=messages
-        )
+        if not success:
+            return {"status": "error", "message": result}
         
         return {
             "status": "success",
-            "architecture": response.choices[0].message.content
+            "architecture": result,
+            "model": used_model
         }
         
     except Exception as e:
         logger.error(f"Architecture design error: {str(e)}")
-        return {
-            "status": "error",
-            "message": str(e)
-        }
+        return {"status": "error", "message": str(e)}
 
 # ==================== API ENDPOINTS ====================
 
 @app.on_event("startup")
 async def startup_event():
     """Initialize on startup"""
-    global memory_mgr, model_manager
+    global memory_mgr
     
     logger.info(f"🚀 Starting Promptly - AI DevOps Assistant v3.2")
     logger.info(f"🔧 Environment: {Config.ENVIRONMENT}")
     logger.info(f"📊 Port: {Config.PORT}")
-    logger.info(f"🤖 LLM Model: {MODEL}")
+    logger.info(f"🤖 LLM Model: {current_model}")
     logger.info(f"🔑 Groq API Key: {'✅ Set' if GROQ_API_KEY else '❌ Not set'}")
     logger.info(f"🧠 AI Agents: 5 specialized agents available")
-    
-    # Initialize Model Manager for dynamic model handling
-    logger.info("🔄 Initializing LLM Model Manager for automatic deprecation handling...")
-    model_manager = await init_model_manager(GROQ_API_KEY)
-    logger.info("✅ LLM Model Manager initialized - will auto-switch on model deprecation")
+    logger.info(f"⚙️  Model fallback enabled - will auto-switch if model is decommissioned")
     
     # Initialize memory manager
     if Config.COGNEE_ENABLED:
@@ -385,9 +376,9 @@ async def startup_event():
             enabled=Config.COGNEE_ENABLED,
             dataset_name=Config.COGNEE_DATASET
         )
-        logger.info(f"✨ Cognee Memory integration: {'Enabled' if memory_mgr.enabled else 'Disabled (fallback to local cache)'}")
+        logger.info(f"✨ Cognee Memory: {'Enabled' if memory_mgr.enabled else 'Disabled'}")
     else:
-        logger.info("💾 Cognee Memory disabled (set COGNEE_ENABLED=true to enable)")
+        logger.info("💾 Cognee Memory disabled")
 
 @app.get("/health")
 async def health_check():
@@ -399,30 +390,23 @@ async def health_check():
         except:
             memory_stats = {"status": "unavailable"}
     
-    model_stats = {}
-    if model_manager:
-        try:
-            model_stats = await model_manager.health_check()
-        except:
-            model_stats = {"status": "unavailable"}
-    
     return {
         "status": "healthy",
         "service": "promptly-ai",
         "name": "Promptly",
         "version": "3.2.0",
         "llm": "groq",
-        "model": model_manager.get_current_model() if model_manager else MODEL,
+        "model": current_model,
         "ai_agents": list(SYSTEM_PROMPTS.keys()),
         "memory": memory_stats,
-        "model_manager": model_stats
+        "fallback_enabled": True
     }
 
 @app.post("/chat", response_model=QueryResponse)
 async def chat(request: QueryRequest):
     """Chat with Promptly AI Assistant"""
     try:
-        logger.info(f"Chat request: {request.query[:100]}...")
+        logger.info(f"Chat request received")
         
         result = await process_query_with_groq(
             query=request.query,
@@ -444,7 +428,7 @@ async def chat(request: QueryRequest):
 
 @app.get("/agents")
 async def list_agents():
-    """List available Promptly AI agents"""
+    """List available AI agents"""
     return {
         "agents": [
             {
@@ -464,31 +448,26 @@ async def recommend_agent(query: QueryRequest):
         
         agent_selector_prompt = """Based on this query, recommend which specialist agent should handle it.
 Choose from: devops_expert, architect, kubernetes_expert, infrastructure_coder, security_specialist
-
-Return ONLY the agent type name, nothing else."""
+Return ONLY the agent type name."""
 
         messages = [
             {"role": "system", "content": agent_selector_prompt},
             {"role": "user", "content": query.query}
         ]
         
-        current_model = model_manager.get_current_model() if model_manager else MODEL
+        success, result, used_model = await try_model_with_fallback(current_model, messages, max_tokens=50)
         
-        response = client.chat.completions.create(
-            model=current_model,
-            max_tokens=50,
-            messages=messages
-        )
-        
-        recommended = response.choices[0].message.content.strip().lower()
-        
-        if recommended not in SYSTEM_PROMPTS:
+        if success:
+            recommended = result.strip().lower()
+            if recommended not in SYSTEM_PROMPTS:
+                recommended = "devops_expert"
+        else:
             recommended = "devops_expert"
         
         return {
             "query": query.query[:100],
             "recommended_agent": recommended,
-            "reason": f"This query is best handled by the {recommended} agent"
+            "model_used": used_model
         }
         
     except Exception as e:
@@ -497,7 +476,7 @@ Return ONLY the agent type name, nothing else."""
 
 @app.post("/architecture/design")
 async def design_app_architecture(request: ArchitectureRequest):
-    """Design architecture for your application"""
+    """Design architecture for application"""
     try:
         logger.info(f"Architecture design request for: {request.project_type}")
         
@@ -515,7 +494,7 @@ async def design_app_architecture(request: ArchitectureRequest):
 
 @app.get("/metrics")
 async def metrics():
-    """Get Promptly system metrics"""
+    """Get system metrics"""
     memory_stats = {}
     if memory_mgr:
         try:
@@ -523,24 +502,13 @@ async def metrics():
         except:
             pass
     
-    model_stats = {}
-    if model_manager:
-        try:
-            model_stats = model_manager.get_model_stats()
-        except:
-            pass
-    
     return {
-        "agent_requests_total": 0,
-        "agent_errors_total": 0,
         "agent_status": "running",
         "llm_provider": "groq",
-        "model": model_manager.get_current_model() if model_manager else MODEL,
+        "current_model": current_model,
         "available_agents": len(SYSTEM_PROMPTS),
-        "streaming_enabled": True,
-        "conversation_support": True,
-        "memory_stats": memory_stats,
-        "model_stats": model_stats
+        "fallback_models": model_fallbacks,
+        "memory_stats": memory_stats
     }
 
 @app.get("/memory/stats")
@@ -551,44 +519,15 @@ async def memory_stats():
     
     return await memory_mgr.get_memory_stats()
 
-@app.get("/model/stats")
-async def model_stats():
-    """Get LLM model manager statistics"""
-    if not model_manager:
-        return {"status": "not_initialized"}
-    
-    return model_manager.get_model_stats()
-
-@app.get("/model/available")
-async def available_models():
-    """Get list of currently available Groq models"""
-    if not model_manager:
-        return {"status": "not_initialized"}
-    
-    models = await model_manager.get_available_models()
-    best = await model_manager.get_best_available_model()
-    
-    return {
-        "current_model": model_manager.get_current_model(),
-        "available_models": models,
-        "best_available_model": best,
-        "model_count": len(models)
-    }
-
 # ==================== STATIC FILES ====================
 
 app_dir = Path(__file__).parent
-if (app_dir.parent / "frontend").exists():
-    frontend_path = app_dir.parent / "frontend"
-else:
-    frontend_path = app_dir / "frontend"
-
-logger.info(f"Frontend path: {frontend_path}")
+frontend_path = app_dir.parent / "frontend" if (app_dir.parent / "frontend").exists() else app_dir / "frontend"
 
 if frontend_path.exists():
     try:
         app.mount("/", StaticFiles(directory=str(frontend_path), html=True), name="static")
-        logger.info(f"✅ Static files mounted at /")
+        logger.info(f"✅ Static files mounted")
     except Exception as e:
         logger.error(f"Error mounting static files: {e}")
 
