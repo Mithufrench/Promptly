@@ -14,6 +14,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy application code
 COPY ai-agent/main.py .
 COPY ai-agent/config.py .
+COPY ai-agent/memory_manager.py .
 
 # Copy frontend files
 COPY frontend/ ./frontend/
@@ -22,11 +23,8 @@ COPY frontend/ ./frontend/
 RUN useradd -m -u 1000 appuser && chown -R appuser:appuser /app
 USER appuser
 
-# DO NOT USE HEALTHCHECK - Let Railway handle it
-# HEALTHCHECK will be managed by railway.toml only
-
 # EXPOSE port - will be overridden by PORT env var at runtime
-EXPOSE 8080
+EXPOSE 8000
 
-# Start application - reads PORT from environment
-CMD ["python", "-u", "ai-agent/main.py"]
+# Start application - reads PORT from environment, binds to 0.0.0.0
+CMD ["python", "-u", "main.py"]
