@@ -12,7 +12,7 @@ class Config:
     LOG_LEVEL = os.getenv("LOG_LEVEL", "INFO")
     AGENT_TIMEOUT = int(os.getenv("AGENT_TIMEOUT", "30"))
     ENVIRONMENT = os.getenv("ENVIRONMENT", "development")
-    MODEL = os.getenv("MODEL", "mixtral-8x7b-32768")
+    MODEL = os.getenv("MODEL", "llama-3.3-70b-versatile")
     
     # Cognee Memory Configuration
     COGNEE_ENABLED = os.getenv("COGNEE_ENABLED", "true").lower() == "true"
