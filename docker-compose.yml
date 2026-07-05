@@ -3,7 +3,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: p2p-agent
+    container_name: promptly-agent
     ports:
       - "8000:8000"
     environment:
@@ -19,9 +19,9 @@ services:
 
   postgres:
     image: postgres:15-alpine
-    container_name: p2p-postgres
+    container_name: promptly-postgres
     environment:
-      POSTGRES_DB: p2pdb
+      POSTGRES_DB: promptly_db
       POSTGRES_USER: admin
       POSTGRES_PASSWORD: ${DB_PASSWORD:-postgres123}
     ports:
