@@ -1,6 +1,6 @@
 """
 Cognee Memory Manager for Promptly AI DevOps Assistant
-Uses Cognee v1.x API: cognee.remember() / cognee.recall() / cognee.forget()
+Uses Cognee v1.x API: cognee.add() / cognee.cognify() / cognee.search()
 """
 
 import logging
@@ -9,6 +9,7 @@ from datetime import datetime
 
 try:
     import cognee
+    from cognee.api.v1.search import SearchType
     COGNEE_AVAILABLE = True
 except ImportError:
     COGNEE_AVAILABLE = False
@@ -16,25 +17,21 @@ except ImportError:
 logger = logging.getLogger(__name__)
 
 
-def _configure_cognee():
+def _configure_cognee(llm_api_key: str, llm_provider: str, vector_db_provider: str, graph_db_provider: str):
     """
-    Apply environment-driven config to Cognee before any API call.
-    Uses file-based backends (sqlite + lancedb + networkx) by default
-    so no external database is required.
+    Apply runtime config to Cognee using its proper setter API.
+    Must be called before any cognee.add/cognify/search call.
     """
     if not COGNEE_AVAILABLE:
         return
     try:
-        from config import Config
-        cognee.config.llm_provider = Config.LLM_PROVIDER
-        cognee.config.llm_api_key = Config.LLM_API_KEY
-        cognee.config.db_provider = Config.DB_PROVIDER
-        cognee.config.vector_db_provider = Config.VECTOR_DB_PROVIDER
-        cognee.config.graph_database_provider = Config.GRAPH_DATABASE_PROVIDER
+        cognee.config.set_llm_api_key(llm_api_key)
+        cognee.config.set_llm_provider(llm_provider)
+        cognee.config.set_vector_db_provider(vector_db_provider)
+        cognee.config.set_graph_database_provider(graph_db_provider)
         logger.info(
-            f"✅ Cognee configured: llm={Config.LLM_PROVIDER}, "
-            f"db={Config.DB_PROVIDER}, vector={Config.VECTOR_DB_PROVIDER}, "
-            f"graph={Config.GRAPH_DATABASE_PROVIDER}"
+            f"✅ Cognee configured: llm={llm_provider}, "
+            f"vector={vector_db_provider}, graph={graph_db_provider}"
         )
     except Exception as e:
         logger.warning(f"⚠️  Cognee config apply failed: {e}")
@@ -43,10 +40,10 @@ def _configure_cognee():
 class CogneeMemoryManager:
     """
     Manages agent memory using Cognee v1.x knowledge graph platform.
-    - remember()  → stores data into the knowledge graph
-    - recall()    → semantic search across stored memory
-    - forget()    → deletes memory
-    Session memory is keyed by session_id for per-user isolation.
+    - cognee.add()     → ingest text data
+    - cognee.cognify() → process into knowledge graph
+    - cognee.search()  → semantic search across stored memory
+    Session memory is keyed by dataset_name for per-user isolation.
     """
 
     def __init__(self, enabled: bool = True, dataset_name: str = "promptly_agent"):
@@ -59,21 +56,25 @@ class CogneeMemoryManager:
             logger.warning("⚠️  Cognee package not found. Falling back to local session cache.")
             self.enabled = False
         else:
-            _configure_cognee()
             logger.info(f"✅ Cognee v1.x Memory Manager ready (dataset: {dataset_name})")
 
     async def initialize(self) -> bool:
         """
-        Verify Cognee is reachable.
-        Cognee v1.x auto-configures from environment variables
-        (LLM_API_KEY, DB_PROVIDER, etc.) — no explicit init call needed.
+        Configure and verify Cognee is reachable.
         """
         if not self.enabled:
             return False
 
         try:
-            # Perform a lightweight recall to confirm the connection works
-            await cognee.recall("init check")
+            from config import Config
+            _configure_cognee(
+                llm_api_key=Config.LLM_API_KEY or Config.GROQ_API_KEY,
+                llm_provider=Config.LLM_PROVIDER,
+                vector_db_provider=Config.VECTOR_DB_PROVIDER,
+                graph_db_provider=Config.GRAPH_DATABASE_PROVIDER,
+            )
+            # Lightweight connectivity check
+            await cognee.search(SearchType.INSIGHTS, query_text="init")
             logger.info("✅ Cognee connection verified")
             return True
         except Exception as e:
@@ -82,7 +83,7 @@ class CogneeMemoryManager:
             return False
 
     # ------------------------------------------------------------------
-    # remember — store a conversation turn in the knowledge graph
+    # remember — ingest + cognify a conversation turn
     # ------------------------------------------------------------------
     async def remember_conversation(
         self,
@@ -93,6 +94,7 @@ class CogneeMemoryManager:
         metadata: Optional[Dict] = None,
     ) -> bool:
         sid = session_id or "default"
+        dataset = f"{self.dataset_name}_{sid}"
 
         # Always keep a local copy for fast fallback
         if sid not in self.session_cache:
@@ -100,14 +102,13 @@ class CogneeMemoryManager:
         self.session_cache[sid].append({
             "timestamp": datetime.now().isoformat(),
             "query": query,
-            "response": response[:500],   # cap length
+            "response": response[:500],
             "agent_type": agent_type,
         })
-        # Keep only the last 20 turns per session
         self.session_cache[sid] = self.session_cache[sid][-20:]
 
         if not self.enabled:
-            return True     # local cache is enough
+            return True
 
         try:
             memory_text = (
@@ -115,8 +116,9 @@ class CogneeMemoryManager:
                 f"User asked: {query}\n"
                 f"Agent answered: {response}"
             )
-            # Cognee v1.x: remember(data, session_id=...) stores into graph + session cache
-            await cognee.remember(memory_text, session_id=sid)
+            # Add text to Cognee dataset, then cognify into knowledge graph
+            await cognee.add(memory_text, dataset_name=dataset)
+            await cognee.cognify(datasets=[dataset])
             logger.info(f"💾 Cognee stored conversation (agent:{agent_type}, session:{sid})")
             return True
 
@@ -125,7 +127,7 @@ class CogneeMemoryManager:
             return False
 
     # ------------------------------------------------------------------
-    # recall — retrieve relevant context for a query
+    # recall — search knowledge graph for relevant context
     # ------------------------------------------------------------------
     async def get_agent_context(
         self,
@@ -136,13 +138,11 @@ class CogneeMemoryManager:
 
         if self.enabled:
             try:
-                # Cognee v1.x: recall(query, session_id=...) auto-routes search strategy
-                results = await cognee.recall(
-                    f"Previous {agent_type} interactions and decisions",
-                    session_id=sid,
+                results = await cognee.search(
+                    SearchType.INSIGHTS,
+                    query_text=f"Previous {agent_type} interactions and decisions"
                 )
                 if results:
-                    # results is a list of strings or dicts depending on Cognee version
                     parts = []
                     for r in results[:3]:
                         if isinstance(r, str):
@@ -154,9 +154,9 @@ class CogneeMemoryManager:
                     logger.info(f"🔍 Cognee recalled {len(results)} memories for {agent_type}")
                     return context
             except Exception as e:
-                logger.warning(f"⚠️  Cognee recall failed: {e} — using local cache")
+                logger.warning(f"⚠️  Cognee search failed: {e} — using local cache")
 
-        # Fallback: return last 3 turns from local cache
+        # Fallback: last 3 turns from local cache
         if sid in self.session_cache:
             recent = self.session_cache[sid][-3:]
             parts = [
@@ -168,14 +168,13 @@ class CogneeMemoryManager:
         return ""
 
     # ------------------------------------------------------------------
-    # forget — delete memories
+    # forget — prune the knowledge graph
     # ------------------------------------------------------------------
     async def forget_memory(
         self,
         session_id: Optional[str] = None,
         all_data: bool = False,
     ) -> bool:
-        # Clear local cache
         if all_data:
             self.session_cache.clear()
         elif session_id and session_id in self.session_cache:
@@ -185,12 +184,11 @@ class CogneeMemoryManager:
             return True
 
         try:
-            # Cognee v1.x forget API
-            await cognee.forget(dataset=self.dataset_name)
-            logger.info("🗑️  Cognee memory cleared")
+            await cognee.prune()
+            logger.info("🗑️  Cognee memory pruned")
             return True
         except Exception as e:
-            logger.warning(f"⚠️  Cognee forget failed: {e}")
+            logger.warning(f"⚠️  Cognee prune failed: {e}")
             return False
 
     # ------------------------------------------------------------------
@@ -200,7 +198,7 @@ class CogneeMemoryManager:
         cognee_ok = False
         if self.enabled:
             try:
-                await cognee.recall("stats check")
+                await cognee.search(SearchType.INSIGHTS, query_text="stats")
                 cognee_ok = True
             except Exception:
                 cognee_ok = False
