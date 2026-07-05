@@ -68,16 +68,14 @@ class CogneeMemoryManager:
 
         try:
             import os
-            # Defensive: ensure Cognee's state directories exist no matter
-            # what SYSTEM_ROOT_DIRECTORY / DATA_ROOT_DIRECTORY resolve to.
-            # sqlite creates the .db file but never the parent directory,
-            # which was the original cause of "unable to open database file".
-            for env_key, default in [
-                ("SYSTEM_ROOT_DIRECTORY", "/app/cognee_data/system"),
-                ("DATA_ROOT_DIRECTORY", "/app/cognee_data/data"),
-            ]:
-                path = os.environ.get(env_key, default)
-                os.makedirs(path, exist_ok=True)
+            # Defensive: ensure Cognee's exact database subdirectory exists.
+            # Cognee's SQLite backend never creates missing directories —
+            # only the .db file — so <system_root>/databases must exist
+            # before ANY cognee call, or you get "unable to open database file".
+            system_root = os.environ.get("SYSTEM_ROOT_DIRECTORY", "/app/cognee_data/system")
+            data_root = os.environ.get("DATA_ROOT_DIRECTORY", "/app/cognee_data/data")
+            os.makedirs(os.path.join(system_root, "databases"), exist_ok=True)
+            os.makedirs(data_root, exist_ok=True)
 
             from config import Config
             _configure_cognee(
@@ -86,6 +84,14 @@ class CogneeMemoryManager:
                 vector_db_provider=Config.VECTOR_DB_PROVIDER,
                 graph_db_provider=Config.GRAPH_DATABASE_PROVIDER,
             )
+
+            # Create Cognee's relational DB tables and register the default
+            # user. Required once before any add/cognify/search/remember call
+            # — without it you get DatabaseNotCreatedError, not a permissions
+            # error, even once the directory above exists.
+            await cognee.run_migrations()
+            logger.info("✅ Cognee database migrations complete")
+
             # Lightweight connectivity check — empty graph returns [] not an error
             await cognee.search("init", SearchType.GRAPH_COMPLETION)
             logger.info("✅ Cognee connection verified")
