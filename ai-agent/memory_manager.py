@@ -9,7 +9,7 @@ from datetime import datetime
 
 try:
     import cognee
-    from cognee.api.v1.search import SearchType
+    from cognee.modules.search.types import SearchType
     COGNEE_AVAILABLE = True
 except ImportError:
     COGNEE_AVAILABLE = False
@@ -74,8 +74,8 @@ class CogneeMemoryManager:
                 vector_db_provider=Config.VECTOR_DB_PROVIDER,
                 graph_db_provider=Config.GRAPH_DATABASE_PROVIDER,
             )
-            # Lightweight connectivity check — search on empty graph returns [] not an error
-            await cognee.search(SearchType.INSIGHTS, query_text="init")
+            # Lightweight connectivity check — empty graph returns [] not an error
+            await cognee.search("init", SearchType.GRAPH_COMPLETION)
             logger.info("✅ Cognee connection verified")
             return True
         except Exception as e:
@@ -142,8 +142,8 @@ class CogneeMemoryManager:
         if self.enabled:
             try:
                 results = await cognee.search(
-                    SearchType.INSIGHTS,
-                    query_text=f"Previous {agent_type} interactions and decisions"
+                    f"Previous {agent_type} interactions and decisions",
+                    SearchType.GRAPH_COMPLETION
                 )
                 if results:
                     parts = []
@@ -201,7 +201,7 @@ class CogneeMemoryManager:
         cognee_ok = False
         if self.enabled:
             try:
-                await cognee.search(SearchType.INSIGHTS, query_text="stats")
+                await cognee.search("stats", SearchType.GRAPH_COMPLETION)
                 cognee_ok = True
             except Exception:
                 cognee_ok = False
