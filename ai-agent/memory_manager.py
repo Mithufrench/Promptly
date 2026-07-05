@@ -49,6 +49,7 @@ class CogneeMemoryManager:
     def __init__(self, enabled: bool = True, dataset_name: str = "promptly_agent"):
         self.enabled = enabled and COGNEE_AVAILABLE
         self.dataset_name = dataset_name
+        self._init_error: Optional[str] = None
         # Local fallback cache when Cognee is unavailable
         self.session_cache: Dict[str, List[Dict]] = {}
 
@@ -73,12 +74,14 @@ class CogneeMemoryManager:
                 vector_db_provider=Config.VECTOR_DB_PROVIDER,
                 graph_db_provider=Config.GRAPH_DATABASE_PROVIDER,
             )
-            # Lightweight connectivity check
+            # Lightweight connectivity check — search on empty graph returns [] not an error
             await cognee.search(SearchType.INSIGHTS, query_text="init")
             logger.info("✅ Cognee connection verified")
             return True
         except Exception as e:
-            logger.warning(f"⚠️  Cognee init check failed: {e} — falling back to local cache")
+            import traceback
+            self._init_error = traceback.format_exc()
+            logger.error(f"❌ Cognee init failed — FULL ERROR: {self._init_error}")
             self.enabled = False
             return False
 
@@ -209,6 +212,7 @@ class CogneeMemoryManager:
             "cognee_connected": cognee_ok,
             "local_sessions": len(self.session_cache),
             "local_entries": sum(len(v) for v in self.session_cache.values()),
+            "init_error": self._init_error,
         }
 
 
