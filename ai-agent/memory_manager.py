@@ -67,6 +67,18 @@ class CogneeMemoryManager:
             return False
 
         try:
+            import os
+            # Defensive: ensure Cognee's state directories exist no matter
+            # what SYSTEM_ROOT_DIRECTORY / DATA_ROOT_DIRECTORY resolve to.
+            # sqlite creates the .db file but never the parent directory,
+            # which was the original cause of "unable to open database file".
+            for env_key, default in [
+                ("SYSTEM_ROOT_DIRECTORY", "/app/cognee_data/system"),
+                ("DATA_ROOT_DIRECTORY", "/app/cognee_data/data"),
+            ]:
+                path = os.environ.get(env_key, default)
+                os.makedirs(path, exist_ok=True)
+
             from config import Config
             _configure_cognee(
                 llm_api_key=Config.LLM_API_KEY or Config.GROQ_API_KEY,
