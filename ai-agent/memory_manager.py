@@ -16,6 +16,30 @@ except ImportError:
 logger = logging.getLogger(__name__)
 
 
+def _configure_cognee():
+    """
+    Apply environment-driven config to Cognee before any API call.
+    Uses file-based backends (sqlite + lancedb + networkx) by default
+    so no external database is required.
+    """
+    if not COGNEE_AVAILABLE:
+        return
+    try:
+        from config import Config
+        cognee.config.llm_provider = Config.LLM_PROVIDER
+        cognee.config.llm_api_key = Config.LLM_API_KEY
+        cognee.config.db_provider = Config.DB_PROVIDER
+        cognee.config.vector_db_provider = Config.VECTOR_DB_PROVIDER
+        cognee.config.graph_database_provider = Config.GRAPH_DATABASE_PROVIDER
+        logger.info(
+            f"✅ Cognee configured: llm={Config.LLM_PROVIDER}, "
+            f"db={Config.DB_PROVIDER}, vector={Config.VECTOR_DB_PROVIDER}, "
+            f"graph={Config.GRAPH_DATABASE_PROVIDER}"
+        )
+    except Exception as e:
+        logger.warning(f"⚠️  Cognee config apply failed: {e}")
+
+
 class CogneeMemoryManager:
     """
     Manages agent memory using Cognee v1.x knowledge graph platform.
@@ -35,6 +59,7 @@ class CogneeMemoryManager:
             logger.warning("⚠️  Cognee package not found. Falling back to local session cache.")
             self.enabled = False
         else:
+            _configure_cognee()
             logger.info(f"✅ Cognee v1.x Memory Manager ready (dataset: {dataset_name})")
 
     async def initialize(self) -> bool:

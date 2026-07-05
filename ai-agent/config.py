@@ -18,26 +18,26 @@ class Config:
     COGNEE_ENABLED = os.getenv("COGNEE_ENABLED", "true").lower() == "true"
     COGNEE_DATASET = os.getenv("COGNEE_DATASET", "promptly_agent")
     
-    # LLM Configuration for Cognee (can be different from Groq)
+    # LLM Configuration for Cognee
     LLM_API_KEY = os.getenv("LLM_API_KEY") or GROQ_API_KEY
-    LLM_PROVIDER = os.getenv("LLM_PROVIDER", "openai")  # For Cognee
-    
-    # Database Configuration
-    DB_PROVIDER = os.getenv("DB_PROVIDER", "postgres")  # postgres, sqlite, etc.
+    LLM_PROVIDER = os.getenv("LLM_PROVIDER", "groq")
+
+    # Database Configuration — default to file-based backends (no external DB needed)
+    DB_PROVIDER = os.getenv("DB_PROVIDER", "sqlite")
     DB_HOST = os.getenv("DB_HOST", "localhost")
     DB_PORT = os.getenv("DB_PORT", "5432")
     DB_USERNAME = os.getenv("DB_USERNAME", "cognee")
     DB_PASSWORD = os.getenv("DB_PASSWORD", "cognee")
     DB_NAME = os.getenv("DB_NAME", "cognee_db")
-    
-    # Vector Database Configuration
-    VECTOR_DB_PROVIDER = os.getenv("VECTOR_DB_PROVIDER", "pgvector")  # pgvector, weaviate, etc.
-    
-    # Graph Database Configuration
-    GRAPH_DATABASE_PROVIDER = os.getenv("GRAPH_DATABASE_PROVIDER", "postgres")  # postgres, neo4j, etc.
-    
+
+    # Vector Database Configuration — default to file-based lancedb
+    VECTOR_DB_PROVIDER = os.getenv("VECTOR_DB_PROVIDER", "lancedb")
+
+    # Graph Database Configuration — default to in-memory networkx
+    GRAPH_DATABASE_PROVIDER = os.getenv("GRAPH_DATABASE_PROVIDER", "networkx")
+
     # Cache Configuration
-    CACHE_BACKEND = os.getenv("CACHE_BACKEND", "postgres")  # postgres, redis, etc.
+    CACHE_BACKEND = os.getenv("CACHE_BACKEND", "sqlite")
     
     # Data Storage
     DATA_ROOT_DIRECTORY = os.getenv("DATA_ROOT_DIRECTORY", ".cognee_data")
