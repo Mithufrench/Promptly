@@ -2,7 +2,7 @@
 
 ## 🚀 Enterprise-Grade AI-Powered DevOps Platform
 
-**Promptly** is an intelligent AI DevOps assistant that automates infrastructure provisioning, DevOps workflows, and architecture design. Powered by Groq's Mixtral LLM with 5 specialized AI agents.
+**Promptly** is an intelligent AI DevOps assistant that automates infrastructure provisioning, DevOps workflows, and architecture design. Powered by Groq's LLaMA 3.3-70b with 5 specialized AI agents and **Cognee knowledge graph memory** for persistent, context-aware conversations.
 
 ## ✨ Key Features
 
@@ -13,10 +13,18 @@
   - Infrastructure Coder: Terraform, Ansible, IaC
   - Security Specialist: Security architecture, compliance
 
+- **🧠 Cognee Knowledge Graph Memory**
+  - Persistent memory across sessions via Cognee v1.x
+  - `cognee.remember()` stores every conversation to the knowledge graph
+  - `cognee.recall()` retrieves semantically relevant past context
+  - `cognee.forget()` clears memory on demand
+  - Per-session isolation with graceful local cache fallback
+
 - **⚡ Real-Time AI Responses**
-  - Powered by Groq's llama-3.1-70b-versatile model
+  - Powered by Groq's llama-3.3-70b-versatile model
+  - Automatic model fallback if a model is deprecated
   - Sub-second response times
-  - Conversation memory & context awareness
+  - Context-aware multi-turn conversations
 
 - **🏗️ Complete DevOps Automation**
   - CI/CD pipeline generation
@@ -26,7 +34,7 @@
 
 - **🎯 Intelligent Routing**
   - Auto-recommends best agent for your query
-  - Multi-turn conversations
+  - Multi-turn conversations with memory
   - Professional dashboard UI
 
 ## 🏛️ Architecture
@@ -43,14 +51,15 @@
 │  • Groq LLM Integration                     │
 │  • REST API Endpoints                       │
 │  • WebSocket Support                        │
-└──────────────────┬──────────────────────────┘
-                   │
-┌──────────────────▼──────────────────────────┐
-│         Groq AI (llama-3.1-70b)             │
-│  • Real-time responses                      │
-│  • Multi-agent coordination                 │
-│  • Architecture design generation           │
-└─────────────────────────────────────────────┘
+└───────────┬──────────────┬──────────────────┘
+            │              │
+┌───────────▼──────┐  ┌────▼────────────────────┐
+│  Groq AI         │  │  Cognee Knowledge Graph  │
+│  llama-3.3-70b   │  │  • cognee.remember()     │
+│  • Fast inference│  │  • cognee.recall()       │
+│  • Auto-fallback │  │  • cognee.forget()       │
+│  • Multi-agent   │  │  • Session isolation     │
+└──────────────────┘  └─────────────────────────┘
 
 ┌─────────────────────────────────────────────┐
 │      Infrastructure (Railway)               │
@@ -66,9 +75,10 @@
 ```
 Promptly/
 ├── ai-agent/                    # Python FastAPI backend
-│   ├── main.py                 # AI agent with Groq integration
-│   ├── requirements.txt         # Python dependencies
-│   └── config.py               # Configuration
+│   ├── main.py                 # FastAPI app + 5 AI agents
+│   ├── memory_manager.py       # Cognee v1.x knowledge graph integration
+│   ├── requirements.txt        # Python dependencies (incl. cognee>=0.5.0)
+│   └── config.py               # Configuration & env vars
 ├── frontend/                    # Web UI
 │   ├── index.html              # Dashboard & chat interface
 │   ├── script.js               # Interactive features
@@ -83,26 +93,54 @@ Promptly/
 └── README.md                    # This file
 ```
 
+## 🧠 Cognee Integration
+
+Promptly uses [Cognee](https://github.com/topoteretes/cognee) as its memory backend. Every conversation is stored in a knowledge graph and retrieved semantically when the agent responds.
+
+```python
+# Store conversation to knowledge graph
+await cognee.remember(memory_text, session_id=sid)
+
+# Retrieve relevant past context
+results = await cognee.recall("Previous devops interactions", session_id=sid)
+
+# Clear memory
+await cognee.forget(dataset="promptly_agent")
+```
+
+**Key properties:**
+- Session-scoped: each user gets an isolated memory namespace
+- Graceful fallback: if Cognee is unavailable, local cache takes over
+- Persistent: memory survives container restarts (when Cognee DB is configured)
+
+Verify it's working:
+```bash
+curl https://promptly.up.railway.app/health
+# → "cognee_connected": true
+
+curl https://promptly.up.railway.app/memory/stats
+# → session counts, entry counts, cognee_connected status
+```
+
 ## 🚀 Quick Start
 
 ### Option 1: Deploy to Railway (Recommended)
 
 ```bash
 # 1. Clone the repository
-git clone https://github.com/yourusername/Promptly.git
+git clone https://github.com/Mithufrench/Promptly.git
 cd Promptly
 
-# 2. Set up your Groq API key
-# Get it from: https://console.groq.com/keys
+# 2. Get your Groq API key from https://console.groq.com/keys
 
 # 3. Connect to Railway
 # Go to https://railway.app/dashboard
-# Create new project → Connect GitHub repo
+# Create new project → Deploy from GitHub → Select Promptly
 
-# 4. Set environment variable in Railway
+# 4. Set environment variables in Railway dashboard
 GROQ_API_KEY=gsk_your_actual_key_here
 
-# 5. Deploy - Railway auto-deploys on git push
+# 5. Railway auto-deploys on every git push
 git push origin main
 ```
 
@@ -110,26 +148,26 @@ git push origin main
 
 ```bash
 # 1. Clone repository
-git clone https://github.com/yourusername/Promptly.git
+git clone https://github.com/Mithufrench/Promptly.git
 cd Promptly
 
 # 2. Create virtual environment
 python -m venv venv
 source venv/bin/activate  # Windows: venv\Scripts\activate
 
-# 3. Install dependencies
+# 3. Install dependencies (includes cognee>=0.5.0)
 pip install -r ai-agent/requirements.txt
 
 # 4. Set environment variables
 export GROQ_API_KEY="your_actual_key"
-export MODEL="llama-3.1-70b-versatile"
+export MODEL="llama-3.3-70b-versatile"
 export PORT=8000
 
 # 5. Run the application
 python ai-agent/main.py
 
 # 6. Open browser
-# Frontend: http://localhost:8000
+# App:      http://localhost:8000
 # API Docs: http://localhost:8000/docs
 ```
 
@@ -169,43 +207,39 @@ Example: *"Design a zero-trust security architecture for cloud applications"*
 
 ## 🔗 API Endpoints
 
-All endpoints are available at `https://your-promptly-domain.railway.app`
+All endpoints are available at `https://promptly.up.railway.app`
 
 ### GET `/health`
-Health check endpoint
 ```bash
-curl https://your-promptly-domain.railway.app/health
+curl https://promptly.up.railway.app/health
 ```
 
 ### POST `/chat`
-Chat with AI assistant
 ```bash
-curl -X POST https://your-promptly-domain.railway.app/chat \
+curl -X POST https://promptly.up.railway.app/chat \
   -H "Content-Type: application/json" \
   -d '{
     "query": "Generate a Docker CI/CD pipeline",
-    "agent_type": "devops_expert"
+    "agent_type": "devops_expert",
+    "session_id": "my-session-123"
   }'
 ```
 
 ### GET `/agents`
-List available agents
 ```bash
-curl https://your-promptly-domain.railway.app/agents
+curl https://promptly.up.railway.app/agents
 ```
 
 ### POST `/agents/recommend`
-Get AI's recommended agent for your query
 ```bash
-curl -X POST https://your-promptly-domain.railway.app/agents/recommend \
+curl -X POST https://promptly.up.railway.app/agents/recommend \
   -H "Content-Type: application/json" \
   -d '{"query": "Help me with Kubernetes"}'
 ```
 
 ### POST `/architecture/design`
-Generate complete architecture design
 ```bash
-curl -X POST https://your-promptly-domain.railway.app/architecture/design \
+curl -X POST https://promptly.up.railway.app/architecture/design \
   -H "Content-Type: application/json" \
   -d '{
     "project_type": "E-commerce Platform",
@@ -213,10 +247,14 @@ curl -X POST https://your-promptly-domain.railway.app/architecture/design \
   }'
 ```
 
-### GET `/metrics`
-System metrics and status
+### GET `/memory/stats`
 ```bash
-curl https://your-promptly-domain.railway.app/metrics
+curl https://promptly.up.railway.app/memory/stats
+```
+
+### GET `/metrics`
+```bash
+curl https://promptly.up.railway.app/metrics
 ```
 
 ## ⚙️ Configuration
@@ -225,71 +263,30 @@ curl https://your-promptly-domain.railway.app/metrics
 
 ```env
 # Groq LLM Configuration
-GROQ_API_KEY=gsk_your_actual_api_key          # Required!
-MODEL=llama-3.1-70b-versatile                 # AI model
+GROQ_API_KEY=gsk_your_actual_api_key          # Required
+MODEL=llama-3.3-70b-versatile                 # Auto-fallback if deprecated
 
 # Server Configuration
-PORT=8000                                      # Port (auto-assigned on Railway)
-ENVIRONMENT=production                         # production or development
-LOG_LEVEL=INFO                                # Logging level
+PORT=8000                                      # Auto-assigned on Railway
+ENVIRONMENT=production
+LOG_LEVEL=INFO
 
 # Python Configuration
-PYTHONUNBUFFERED=1                            # Real-time logging
+PYTHONUNBUFFERED=1
 ```
 
 ### How to Get Groq API Key
 
 1. Visit https://console.groq.com
 2. Sign up (free account)
-3. Go to API Keys section
-4. Create new API key
-5. Copy and use in your environment
-
-## 🚀 Deployment on Railway
-
-### Prerequisites
-- GitHub account
-- Groq API key
-- Railway account (free tier available)
-
-### Steps
-
-1. **Fork/Clone Repository**
-   ```bash
-   git clone https://github.com/yourusername/Promptly.git
-   cd Promptly
-   ```
-
-2. **Push to GitHub**
-   ```bash
-   git add .
-   git commit -m "Initial Promptly deployment"
-   git push origin main
-   ```
-
-3. **Connect to Railway**
-   - Go to https://railway.app/dashboard
-   - Click "New Project"
-   - Select "Deploy from GitHub"
-   - Choose your Promptly repository
-   - Follow setup wizard
-
-4. **Add Environment Variables**
-   - In Railway dashboard
-   - Click your service
-   - Variables tab
-   - Add `GROQ_API_KEY` with your actual key
-
-5. **Deploy**
-   - Railway auto-deploys when you push to GitHub
-   - Watch deployment progress in dashboard
-   - Get your live URL once deployment completes
+3. Go to API Keys → Create new key
+4. Set as `GROQ_API_KEY` in Railway Variables tab
 
 ## 📊 Monitoring
 
 ### Health Check
 ```bash
-curl https://your-promptly-domain.railway.app/health
+curl https://promptly.up.railway.app/health
 ```
 
 Expected response:
@@ -298,43 +295,42 @@ Expected response:
   "status": "healthy",
   "service": "promptly-ai",
   "name": "Promptly",
-  "version": "3.1.0",
+  "version": "3.2.0",
   "llm": "groq",
-  "model": "llama-3.1-70b-versatile",
+  "model": "llama-3.3-70b-versatile",
+  "fallback_enabled": true,
   "ai_agents": ["devops_expert", "architect", "kubernetes_expert", "infrastructure_coder", "security_specialist"]
 }
 ```
 
 ## 🔒 Security
 
-- ✅ API key secured via environment variables
-- ✅ No credentials in code
+- ✅ API key secured via environment variables (never in code)
 - ✅ HTTPS/SSL enabled on Railway
 - ✅ CORS configured for web requests
 - ✅ Error messages don't leak sensitive info
-- ✅ Rate limiting ready (implement if needed)
+- ✅ Per-session memory isolation via Cognee
 
 ## 🛠️ Troubleshooting
 
 ### Application not responding
 1. Check Railway deployment status
-2. Verify GROQ_API_KEY is set in Railway variables
+2. Verify `GROQ_API_KEY` is set in Railway Variables tab
 3. Check logs: Railway dashboard → Logs tab
 
 ### Model not working
-- Ensure GROQ_API_KEY is set correctly
-- Verify key hasn't expired
-- Check API key permissions in Groq console
+- The app auto-switches to fallback models if the primary is deprecated
+- Verify `GROQ_API_KEY` is valid at https://console.groq.com
 
-### Chat returning errors
-1. Check Railway logs for error details
-2. Verify Groq API key is valid
-3. Try a simpler query first
+### Cognee not connecting
+- App falls back to local session cache automatically
+- Check `/health` → `cognee_connected` field to see status
 
 ## 📚 Technologies Used
 
-- **Backend**: FastAPI (Python)
-- **AI/LLM**: Groq + llama-3.1-70b-versatile
+- **Backend**: FastAPI (Python, async)
+- **AI/LLM**: Groq + llama-3.3-70b-versatile (with auto-fallback)
+- **Memory**: Cognee v1.x knowledge graph (`cognee.remember/recall/forget`)
 - **Frontend**: HTML/CSS/JavaScript
 - **Deployment**: Railway, Docker
 - **Infrastructure**: Terraform, Ansible, Kubernetes
@@ -353,20 +349,17 @@ MIT License - see LICENSE file for details
 
 ## 🎯 Roadmap
 
-- [ ] Add streaming responses
-- [ ] Support for multiple LLM providers
+- [ ] Streaming responses
+- [ ] Multi-LLM provider support
 - [ ] User authentication & API keys
 - [ ] Query history & analytics
-- [ ] Advanced prompt engineering
-- [ ] Integration with external tools
 - [ ] Mobile app
 
 ## 📞 Support
 
 - Issues: GitHub Issues
 - Discussions: GitHub Discussions
-- Email: support@promptly.ai
 
 ---
 
-**Promptly** - Your AI DevOps Assistant. Always ready to help. 🚀
+**Promptly** — AI DevOps Assistant with persistent knowledge graph memory. 🚀
